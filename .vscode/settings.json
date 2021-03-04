@@ -1,0 +1,8 @@
+{
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    },
+    "vetur.validation.template": false,
+    "csscomb.formatOnSave": true,
+    "csscomb.ignoreFilesOnSave": ["**/**/reset.scss"]
+}
