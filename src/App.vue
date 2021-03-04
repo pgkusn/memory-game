@@ -46,13 +46,13 @@ export default {
         const levelData = ref([]);
         const currentLevelData = computed(() => levelData.value[currentLevel.value] || 0);
         const isActive = ref([false, false, false, false]);
-        const isActiveAll = ref(false);
         const clicked = ref([]);
-        const passCount = ref(0);
-        const clickDisabled = ref(false);
         const status = ref(0); // 1: correct 2: wrong
         const statusText = computed(() => status.value === 1 ? 'Correct!' : status.value === 2 ? 'Wrong...' : '');
         const statusClass = computed(() => status.value === 1 ? 'correct' : status.value === 2 ? 'wrong' : '');
+        let passCount = 0;
+        let isActiveAll = false;
+        let clickDisabled = false;
 
         // init sound
         const scales = [1, 2, 3, 4, 5, 5.5, 7, 8];
@@ -63,7 +63,7 @@ export default {
         });
 
         watch(isActive.value, arr => {
-            if (isActiveAll.value) return;
+            if (isActiveAll) return;
             arr.forEach((item, index) => {
                 if (item) {
                     playSound(index + 1);
@@ -81,7 +81,7 @@ export default {
         };
 
         const clickHandler = index => {
-            if (clickDisabled.value) return;
+            if (clickDisabled) return;
             isActive.value[index] = true;
             clicked.value.push(index + 1);
 
@@ -89,8 +89,8 @@ export default {
             setTimeout(() => {
                 const pass = currentLevelData.value.startsWith(clicked.value.join(''));
                 if (pass) {
-                    passCount.value++;
-                    if (passCount.value === currentLevelData.value.length) {
+                    passCount++;
+                    if (passCount === currentLevelData.value.length) {
                         next(true);
                     }
                 }
@@ -101,14 +101,14 @@ export default {
         };
 
         const demoLevel = () => {
-            clickDisabled.value = true;
+            clickDisabled = true;
             const currentLevelDataArr = currentLevelData.value.split('');
             for (let i = 0; i < currentLevelDataArr.length; i++) {
                 setTimeout(() => {
                     const activeIndex = currentLevelDataArr[i] - 1;
                     isActive.value[activeIndex] = true;
                     if (i === currentLevelDataArr.length - 1) {
-                        clickDisabled.value = false;
+                        clickDisabled = false;
                     }
                 }, 500 * (i + 1));
             }
@@ -129,18 +129,20 @@ export default {
             }
             status.value = 0;
             clicked.value.length = 0;
-            passCount.value = 0;
+            passCount = 0;
             demoLevel();
         };
 
         const activeAll = allPass => {
             return new Promise(resolve => {
-                isActiveAll.value = true;
-                clickDisabled.value = true;
+                isActiveAll = true;
+                clickDisabled = true;
                 setTimeout(() => {
                     isActive.value.forEach((item, index) => {
                         isActive.value[index] = true;
                     });
+
+                    // play success or fail sound
                     if (allPass) {
                         playSound(1);
                         playSound(3);
@@ -153,6 +155,7 @@ export default {
                         playSound(5.5);
                         playSound(7);
                     }
+
                     resolve();
                 }, 500);
             });
@@ -164,8 +167,8 @@ export default {
                     isActive.value.forEach((item, index) => {
                         isActive.value[index] = false;
                     });
-                    isActiveAll.value = false;
-                    clickDisabled.value = false;
+                    isActiveAll = false;
+                    clickDisabled = false;
                     resolve();
                 }, 1000);
             });
