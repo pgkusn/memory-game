@@ -55,18 +55,18 @@ export default {
         const statusClass = computed(() => status.value === 1 ? 'correct' : status.value === 2 ? 'wrong' : '');
 
         // init sound
-        const sounds = [];
-        for (let i = 1; i <= 4; i++) {
-            const sound = new Audio(`http://awiclass.monoame.com/pianosound/set/${i}.wav`);
-            sound.setAttribute('preload', 'auto');
-            sounds.push(sound);
-        }
+        const scales = [1, 2, 3, 4, 5, 5.5, 7, 8];
+        const sounds = scales.map(scale => {
+            const audioObj = new Audio(`http://awiclass.monoame.com/pianosound/set/${scale}.wav`);
+            audioObj.setAttribute('preload', 'auto');
+            return { scale, audioObj };
+        });
 
         watch(isActive.value, arr => {
             if (isActiveAll.value) return;
             arr.forEach((item, index) => {
                 if (item) {
-                    playSound(index);
+                    playSound(index + 1);
                     setTimeout(() => {
                         isActive.value[index] = false;
                     }, 50);
@@ -74,10 +74,10 @@ export default {
             });
         });
 
-        const playSound = index => {
-            const sound = sounds[index];
-            sound.currentTime = 0;
-            sound.play();
+        const playSound = scale => {
+            const sound = sounds.find(sound => sound.scale === scale);
+            sound.audioObj.currentTime = 0;
+            sound.audioObj.play();
         };
 
         const clickHandler = index => {
@@ -117,13 +117,13 @@ export default {
         const next = async allPass => {
             if (allPass) {
                 status.value = 1;
-                await activeAll();
+                await activeAll(allPass);
                 await inactiveAll();
                 currentLevel.value++;
             }
             else {
                 status.value = 2;
-                await activeAll();
+                await activeAll(allPass);
                 await inactiveAll();
                 currentLevel.value = 0;
             }
@@ -133,15 +133,26 @@ export default {
             demoLevel();
         };
 
-        const activeAll = () => {
+        const activeAll = allPass => {
             return new Promise(resolve => {
                 isActiveAll.value = true;
                 clickDisabled.value = true;
                 setTimeout(() => {
-                    sounds.forEach((sound, index) => {
+                    isActive.value.forEach((item, index) => {
                         isActive.value[index] = true;
-                        playSound(index);
                     });
+                    if (allPass) {
+                        playSound(1);
+                        playSound(3);
+                        playSound(5);
+                        playSound(8);
+                    }
+                    else {
+                        playSound(2);
+                        playSound(4);
+                        playSound(5.5);
+                        playSound(7);
+                    }
                     resolve();
                 }, 500);
             });
